@@ -56,14 +56,13 @@ namespace Task_2EF
                 opt.RequireHttpsMetadata = false;
                 opt.TokenValidationParameters = new TokenValidationParameters()
                 {
-                    ValidateIssuerSigningKey = bool.Parse(_configuration["JsonWebTokenKeys:ValidateIssuerSigningKey"]),
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JsonWebTokenKeys:IssuerSigninKey"])),
-                    ValidateIssuer = bool.Parse(_configuration["JsonWebTokenKeys:ValidateIssuer"]),
-                    ValidAudience = _configuration["JsonWebTokenKeys:ValidAudience"],
-                    ValidIssuer = _configuration["JsonWebTokenKeys:ValidIssuer"],
-                    ValidateAudience = bool.Parse(_configuration["JsonWebTokenKeys:ValidateAudience"]),
-                    RequireExpirationTime = bool.Parse(_configuration["JsonWebTokenKeys:RequireExpirationTime"]),
-                    ValidateLifetime = bool.Parse(_configuration["JsonWebTokenKeys:ValidateLifetime"])
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidAudience = _configuration["JWT:ValidAudience"],
+                    ValidIssuer = _configuration["JWT:ValidIssuer"],
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(_configuration["JWT:Secret"])
+                        )
                 };
             });
 

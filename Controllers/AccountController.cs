@@ -59,38 +59,28 @@ namespace Task_2EF.Controllers
             if (user != null &&
                 await _userManager.CheckPasswordAsync(user, userModel.Password))
             {
-                //var identity = new ClaimsIdentity(IdentityConstants.ApplicationScheme);
-                //identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id));
-                //identity.AddClaim(new Claim(ClaimTypes.Name, user.UserName));
-                //await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme,
-                //new ClaimsPrincipal(identity));
-                var userRoles = await _userManager.GetRolesAsync(user);
-                var authClaims = new List<Claim>
-                        {
-                            new Claim(ClaimTypes.Name, user.UserName),
-                            //new Claim(ClaimTypes.MobilePhone,user.PhoneNumber),
-                            new Claim(ClaimTypes.Email,user.Email),
-                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                        };
+                var authClaims = new List<Claim>()
+                    {
+                        new Claim(ClaimTypes.Name, user.UserName),
+                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                    };
+                
 
-                foreach (var userRole in userRoles)
-                {
-                    authClaims.Add(new Claim(ClaimTypes.Role, userRole));
-                }
-
-                var authSigninKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JsonWebTokenKeys:IssuerSigninKey"]));
+                var authenKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
                 var token = new JwtSecurityToken(
-                             expires: DateTime.Now.AddHours(3),
-                             claims: authClaims,
-                             signingCredentials: new SigningCredentials(authSigninKey, SecurityAlgorithms.HmacSha256)
-                         );
+                    issuer: _configuration["JWT:ValidIssuer"],
+                    audience: _configuration["JWT:ValidAudience"],
+                    expires: DateTime.Now.AddMinutes(20),
+                    claims: authClaims,
+                    signingCredentials: new SigningCredentials(authenKey,
+                                            SecurityAlgorithms.HmacSha512Signature)
+                    );
 
 
                 return Ok(new
                 {
                     api_key = new JwtSecurityTokenHandler().WriteToken(token),
                     expiration = token.ValidTo,
-                    Role = userRoles,
                     status = "Login successfully."
                 });
             }
