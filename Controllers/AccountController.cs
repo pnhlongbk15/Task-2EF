@@ -18,7 +18,11 @@ namespace Task_2EF.Controllers
         private readonly UserManager<User> _userManager;
         private readonly IConfiguration _configuration;
 
-        public AccountController(IMapper mapper, UserManager<User> userManager, IConfiguration configuration)
+        public AccountController(
+            IMapper mapper,
+            UserManager<User> userManager,
+            IConfiguration configuration
+        )
         {
             _mapper = mapper;
             _userManager = userManager;
@@ -32,8 +36,10 @@ namespace Task_2EF.Controllers
             var IsExist = await _userManager.FindByEmailAsync(userModel.Email);
             if (IsExist != null)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                            new { Status = "Error", Message = "User already exists!" });
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new { Status = "Error", Message = "User already exists!" }
+                );
             }
 
             var user = _mapper.Map<User>(userModel);
@@ -49,15 +55,13 @@ namespace Task_2EF.Controllers
 
             await _userManager.AddToRoleAsync(user, "Visitor");
             return Ok("Register successfull.");
-
         }
 
         [HttpPost]
         public async Task<IActionResult> Login(UserLoginModel userModel)
         {
             var user = await _userManager.FindByEmailAsync(userModel.Email);
-            if (user != null &&
-                await _userManager.CheckPasswordAsync(user, userModel.Password))
+            if (user != null && await _userManager.CheckPasswordAsync(user, userModel.Password))
             {
                 //var identity = new ClaimsIdentity(IdentityConstants.ApplicationScheme);
                 //identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id));
@@ -66,33 +70,41 @@ namespace Task_2EF.Controllers
                 //new ClaimsPrincipal(identity));
                 var userRoles = await _userManager.GetRolesAsync(user);
                 var authClaims = new List<Claim>
-                        {
-                            new Claim(ClaimTypes.Name, user.UserName),
-                            //new Claim(ClaimTypes.MobilePhone,user.PhoneNumber),
-                            new Claim(ClaimTypes.Email,user.Email),
-                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                        };
+                {
+                    new Claim(ClaimTypes.Name, user.UserName),
+                    //new Claim(ClaimTypes.MobilePhone,user.PhoneNumber),
+                    new Claim(ClaimTypes.Email, user.Email),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                };
 
                 foreach (var userRole in userRoles)
                 {
                     authClaims.Add(new Claim(ClaimTypes.Role, userRole));
                 }
 
-                var authSigninKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JsonWebTokenKeys:IssuerSigninKey"]));
+                var authSigninKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(_configuration["JsonWebTokenKeys:IssuerSigninKey"])
+                );
                 var token = new JwtSecurityToken(
-                             expires: DateTime.Now.AddHours(3),
-                             claims: authClaims,
-                             signingCredentials: new SigningCredentials(authSigninKey, SecurityAlgorithms.HmacSha256)
-                         );
+                    issuer: _configuration["JsonWebTokenKeys:ValidIssuer"],
+                    audience: _configuration["JsonWebTokenKeys:ValidAudience"],
+                    expires: DateTime.Now.AddHours(3),
+                    signingCredentials: new SigningCredentials(
+                        authSigninKey,
+                        SecurityAlgorithms.HmacSha256
+                    ),
+                    claims: authClaims
+                );
 
-
-                return Ok(new
-                {
-                    api_key = new JwtSecurityTokenHandler().WriteToken(token),
-                    expiration = token.ValidTo,
-                    Role = userRoles,
-                    status = "Login successfully."
-                });
+                return Ok(
+                    new
+                    {
+                        api_key = new JwtSecurityTokenHandler().WriteToken(token),
+                        expiration = token.ValidTo,
+                        Role = userRoles,
+                        status = "Login successfully."
+                    }
+                );
             }
             else
             {

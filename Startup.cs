@@ -58,12 +58,15 @@ namespace Task_2EF
                 {
                     ValidateIssuerSigningKey = bool.Parse(_configuration["JsonWebTokenKeys:ValidateIssuerSigningKey"]),
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JsonWebTokenKeys:IssuerSigninKey"])),
+                    
                     ValidateIssuer = bool.Parse(_configuration["JsonWebTokenKeys:ValidateIssuer"]),
-                    ValidAudience = _configuration["JsonWebTokenKeys:ValidAudience"],
                     ValidIssuer = _configuration["JsonWebTokenKeys:ValidIssuer"],
+
                     ValidateAudience = bool.Parse(_configuration["JsonWebTokenKeys:ValidateAudience"]),
+                    ValidAudience = _configuration["JsonWebTokenKeys:ValidAudience"],
+
+                    ValidateLifetime = bool.Parse(_configuration["JsonWebTokenKeys:ValidateLifetime"]),
                     RequireExpirationTime = bool.Parse(_configuration["JsonWebTokenKeys:RequireExpirationTime"]),
-                    ValidateLifetime = bool.Parse(_configuration["JsonWebTokenKeys:ValidateLifetime"])
                 };
             });
 
