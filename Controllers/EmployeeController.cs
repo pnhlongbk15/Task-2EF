@@ -1,26 +1,29 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Task_2EF.DAL.Entities;
 using Task_2EF.DAL.Repository;
-using Microsoft.AspNetCore.Authorization;
 
 namespace Task_2EF.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Visitor")]
     [ApiController]
     [Route("api/[controller]")]
     public class EmployeeController : ControllerBase
     {
-        private readonly IDataRepository<Employee> _dataRepository;
-        public EmployeeController(IDataRepository<Employee> dataRepository)
+        private readonly IService<Employee> _service;
+        private IMemoryCache _cache;
+        public EmployeeController(IService<Employee> service)
         {
-            _dataRepository = dataRepository;
+            _service = service;
         }
 
         // GET: api/Employee
         [HttpGet]
         public IActionResult Get()
         {
-            IEnumerable<Employee> employees = _dataRepository.GetAll();
+
+            IEnumerable<Employee> employees = _service.GetAll();
             return Ok(employees);
         }
 
@@ -28,7 +31,7 @@ namespace Task_2EF.Controllers
         [HttpGet("{id}", Name = "Get")]
         public IActionResult Get(long id)
         {
-            Employee employee = _dataRepository.Get(id);
+            Employee employee = _service.Get(id);
             if (employee == null)
             {
                 return NotFound("The Employee record couldn't be found.");
@@ -44,7 +47,7 @@ namespace Task_2EF.Controllers
             {
                 return BadRequest("Employee is null.");
             }
-            _dataRepository.Add(employee);
+            _service.Add(employee);
             return CreatedAtRoute(
                   "Get",
                   new { Id = employee.EmployeeId },
@@ -59,12 +62,12 @@ namespace Task_2EF.Controllers
             {
                 return BadRequest("Employee is null.");
             }
-            Employee employeeToUpdate = _dataRepository.Get(id);
+            Employee employeeToUpdate = _service.Get(id);
             if (employeeToUpdate == null)
             {
                 return NotFound("The Employee record couldn't be found.");
             }
-            _dataRepository.Update(employeeToUpdate, employee);
+            _service.Update(employeeToUpdate, employee);
             return NoContent();
         }
 
@@ -72,12 +75,12 @@ namespace Task_2EF.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(long id)
         {
-            Employee employee = _dataRepository.Get(id);
+            Employee employee = _service.Get(id);
             if (employee == null)
             {
                 return NotFound("The Employee record couldn't be found.");
             }
-            _dataRepository.Delete(employee);
+            _service.Delete(employee);
             return NoContent();
         }
     }

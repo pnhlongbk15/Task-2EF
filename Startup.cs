@@ -3,10 +3,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Task_2EF.Configuration;
 using Task_2EF.DAL;
 using Task_2EF.DAL.DataManager;
 using Task_2EF.DAL.Entities;
 using Task_2EF.DAL.Repository;
+using Task_2EF.DAL.Services;
 
 namespace Task_2EF
 {
@@ -30,10 +32,20 @@ namespace Task_2EF
                 );
             });
             // 
-            services.AddAutoMapper(typeof(Startup));
+            //services.AddAutoMapper(typeof(Startup));
+            services.AddAutoMapper(configAction =>
+            {
+                configAction.AddProfile<MappingProfile>();
+            });
 
             // DAL
-            services.AddScoped<IDataRepository<Employee>, EmployeeManager>();
+            services.AddScoped<IService<Employee>, EmployeeService>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddMemoryCache(setup =>
+            {
+                setup.SizeLimit = 1000;
+                //setup.ExpirationScanFrequency.Add()
+            });
 
             // Database
             services.AddDbContext<DbContext, ApplicationContext>(options =>
@@ -58,7 +70,7 @@ namespace Task_2EF
                 {
                     ValidateIssuerSigningKey = bool.Parse(_configuration["JsonWebTokenKeys:ValidateIssuerSigningKey"]),
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JsonWebTokenKeys:IssuerSigninKey"])),
-                    
+
                     ValidateIssuer = bool.Parse(_configuration["JsonWebTokenKeys:ValidateIssuer"]),
                     ValidIssuer = _configuration["JsonWebTokenKeys:ValidIssuer"],
 

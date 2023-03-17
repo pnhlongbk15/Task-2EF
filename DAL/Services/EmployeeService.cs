@@ -3,10 +3,10 @@ using Task_2EF.DAL.Repository;
 
 namespace Task_2EF.DAL.DataManager
 {
-    public class EmployeeManager : IDataRepository<Employee>
+    public class EmployeeService : IService<Employee>
     {
         private readonly ApplicationContext _context;
-        public EmployeeManager(ApplicationContext context)
+        public EmployeeService(ApplicationContext context)
         {
             _context = context;
         }

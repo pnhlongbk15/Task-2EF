@@ -1,6 +1,6 @@
 ﻿namespace Task_2EF.DAL.Repository
 {
-    public interface IDataRepository<TEntity>
+    public interface IService<TEntity>
     {
         IEnumerable<TEntity> GetAll();
         TEntity Get(long id);
