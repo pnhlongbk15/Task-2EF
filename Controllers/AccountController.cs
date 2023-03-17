@@ -152,7 +152,7 @@ namespace Task_2EF.Controllers
             try { 
                 var aUser = await _userManager.FindByEmailAsync(mForgotPassword.Email);
                 if(aUser == null){
-                    return BadRequest("Incorrect.")
+                    return BadRequest("Incorrect.");
                 }
                 var token = await _userManager.GeneratePasswordResetTokenAsync(aUser);
 
@@ -192,7 +192,7 @@ namespace Task_2EF.Controllers
             if (mResetPassword == null) {
                 return BadRequest("you try again.");
             }
-            
+
             try {
 
                 var aUser = await _userManager.FindByEmailAsync(mResetPassword.Email);

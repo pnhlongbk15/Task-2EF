@@ -20,16 +20,16 @@ namespace Task_2EF
     internal class Startup
     {
         private readonly IConfiguration _configuration;
+
         public Startup(IConfiguration configuration)
         {
             _configuration = configuration;
         }
+
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSwaggerGen();
-            services.AddControllers(option =>
-            {
-            });
+            services.AddControllers(option => { });
             services.AddOptions();
             services.AddCors(configs =>
             {
@@ -38,7 +38,7 @@ namespace Task_2EF
                     options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()
                 );
             });
-            // 
+            //
             //services.AddAutoMapper(typeof(Startup));
             services.AddAutoMapper(configAction =>
             {
@@ -60,7 +60,8 @@ namespace Task_2EF
                 options.UseSqlServer(_configuration.GetConnectionString("EmployeeDB"));
             });
             // Identity
-            services.AddIdentity<User, IdentityRole>()
+            services
+                .AddIdentity<User, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationContext>()
                 .AddDefaultTokenProviders();
 
@@ -76,51 +77,68 @@ namespace Task_2EF
 
                 // Sign in
                 opt.SignIn.RequireConfirmedEmail = true;
+                
 
+                // Lock
+                opt.Lockout.AllowedForNewUsers = true;
+                opt.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(2);
+                opt.Lockout.MaxFailedAccessAttempts = 3;
             });
 
-            services.AddAuthentication(opt =>
-            {
-                opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                opt.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(opt =>
-            {
-                opt.SaveToken = true;
-                opt.RequireHttpsMetadata = false;
-                opt.TokenValidationParameters = new TokenValidationParameters()
+            services
+                .AddAuthentication(opt =>
                 {
-                    ValidateIssuerSigningKey = bool.Parse(_configuration["JsonWebTokenKeys:ValidateIssuerSigningKey"]),
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JsonWebTokenKeys:IssuerSigninKey"])),
-
-                    ValidateIssuer = bool.Parse(_configuration["JsonWebTokenKeys:ValidateIssuer"]),
-                    ValidIssuer = _configuration["JsonWebTokenKeys:ValidIssuer"],
-
-                    ValidateAudience = bool.Parse(_configuration["JsonWebTokenKeys:ValidateAudience"]),
-                    ValidAudience = _configuration["JsonWebTokenKeys:ValidAudience"],
-
-                    ValidateLifetime = bool.Parse(_configuration["JsonWebTokenKeys:ValidateLifetime"]),
-                    RequireExpirationTime = bool.Parse(_configuration["JsonWebTokenKeys:RequireExpirationTime"]),
-                };
-            });
+                    opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                    opt.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(opt =>
+                {
+                    opt.SaveToken = true;
+                    opt.RequireHttpsMetadata = false;
+                    opt.TokenValidationParameters = new TokenValidationParameters()
+                    {
+                        ValidateIssuerSigningKey = bool.Parse(
+                            _configuration["JsonWebTokenKeys:ValidateIssuerSigningKey"]
+                        ),
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(
+                                _configuration["JsonWebTokenKeys:IssuerSigninKey"]
+                            )
+                        ),
+                        ValidateIssuer = bool.Parse(
+                            _configuration["JsonWebTokenKeys:ValidateIssuer"]
+                        ),
+                        ValidIssuer = _configuration["JsonWebTokenKeys:ValidIssuer"],
+                        ValidateAudience = bool.Parse(
+                            _configuration["JsonWebTokenKeys:ValidateAudience"]
+                        ),
+                        ValidAudience = _configuration["JsonWebTokenKeys:ValidAudience"],
+                        ValidateLifetime = bool.Parse(
+                            _configuration["JsonWebTokenKeys:ValidateLifetime"]
+                        ),
+                        RequireExpirationTime = bool.Parse(
+                            _configuration["JsonWebTokenKeys:RequireExpirationTime"]
+                        ),
+                    };
+                });
 
             //token
-           // services.Configure<DataProtectionTokenProviderOptions>();
+            // services.Configure<DataProtectionTokenProviderOptions>();
 
             services.Configure<EmployeeController>(config =>
             {
                 config.options = new MemoryCacheEntryOptions()
-                                    .SetAbsoluteExpiration(TimeSpan.FromSeconds(3600))
-                                    .SetSlidingExpiration(TimeSpan.FromSeconds(60))
-                                    .SetPriority(CacheItemPriority.Normal)
-                                    .SetSize(100);
-
+                    .SetAbsoluteExpiration(TimeSpan.FromSeconds(3600))
+                    .SetSlidingExpiration(TimeSpan.FromSeconds(60))
+                    .SetPriority(CacheItemPriority.Normal)
+                    .SetSize(100);
             });
 
             //Mail
             var emailConfig = _configuration
-                                .GetSection("EmailConfiguration")
-                                .Get<EmailConfiguration>();
+                .GetSection("EmailConfiguration")
+                .Get<EmailConfiguration>();
 
             services.AddSingleton(emailConfig);
             services.AddScoped<IEmailSender, MailService>();
@@ -133,10 +151,8 @@ namespace Task_2EF
             });
         }
 
-
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-
             if (env.IsDevelopment())
             {
                 app.UseSwagger();
