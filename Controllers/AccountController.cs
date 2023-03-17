@@ -45,13 +45,22 @@ namespace Task_2EF.Controllers
             {
                 var user = _mapper.Map<User>(userModel);
                 var token = await _service.RegisterAsync(user);
-                var confirmUrl = Url.Action(nameof(ConfirmEmail), "Account", new { token, email = user.Email }, Request.Scheme);
+                var confirmUrl = Url.Action(
+                    nameof(ConfirmEmail),
+                    "Account",
+                    new { token, email = user.Email },
+                    Request.Scheme
+                );
 
                 var contentEmail = "Please click here: <a href=\"#URL#\">Click here.</a>";
                 contentEmail = contentEmail.Replace("#URL#", confirmUrl);
 
                 // send
-                await _emailSender.SendEmailAsync(userModel.Email, "Authen your account.", contentEmail);
+                await _emailSender.SendEmailAsync(
+                    userModel.Email,
+                    "Authen your account.",
+                    contentEmail
+                );
             }
             catch (Exception ex)
             {
@@ -119,17 +128,91 @@ namespace Task_2EF.Controllers
             {
                 return BadRequest("Invalid email confirmation url.");
             }
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user == null)
+            var aUser = await _userManager.FindByEmailAsync(email);
+            if (aUser == null)
             {
                 return BadRequest("Please try again later.");
             }
 
-            var result = await _userManager.ConfirmEmailAsync(user, token);
-            var status = result.Succeeded ? "Thank you for confirming your mail" :
-                                            "Your email is not confirmed, please try again later.";
+            var result = await _userManager.ConfirmEmailAsync(aUser, token);
+            var status = result.Succeeded
+                ? "Thank you for confirming your mail"
+                : "Your email is not confirmed, please try again later.";
 
             return Ok(status);
         }
-    }
+
+        [HttpPost]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordModel mForgotPassword)
+        {
+            if (mForgotPassword == null)
+            {
+                return BadRequest("Please entry your email.");
+            }
+            try { 
+                var aUser = await _userManager.FindByEmailAsync(mForgotPassword.Email);
+                if(aUser == null){
+                    return BadRequest("Incorrect.")
+                }
+                var token = await _userManager.GeneratePasswordResetTokenAsync(aUser);
+
+                var confirmUrl = Url.Action(
+                    nameof(ResetPassword),
+                    "Account",
+                    new { token, email = mForgotPassword.Email },
+                    Request.Scheme
+                );
+
+                var contentEmail = "Please click here to retrive password: <a href=\"#URL#\">Click here.</a>";
+                contentEmail = contentEmail.Replace("#URL#", confirmUrl);
+
+                // send
+                await _emailSender.SendEmailAsync(
+                    mForgotPassword.Email,
+                    "Retrive your account.",
+                    contentEmail
+                );
+            }
+            catch (Exception ex) { 
+                return StatusCode(500, ex.Message);
+            }
+
+            return Ok("Check mail please.");
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string token, string email){
+            return Ok(new {
+                token = token,
+                email = email
+            });
+        }
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(ResetPasswordModel mResetPassword){
+            if (mResetPassword == null) {
+                return BadRequest("you try again.");
+            }
+            
+            try {
+
+                var aUser = await _userManager.FindByEmailAsync(mResetPassword.Email);
+                if(aUser == null) {
+                    return BadRequest("User doesn't exist.");
+                }
+                var resetPassResult = await _userManager.ResetPasswordAsync(aUser, mResetPassword.Token, mResetPassword.Password);
+                if(!resetPassResult.Succeeded) {
+                    foreach (var error in resetPassResult.Errors)
+                    {
+                        ModelState.TryAddModelError(error.Code, error.Description);
+                    }
+                    return StatusCode(500, ModelState);
+                }
+                return Ok("Reset password successfully.");
+
+            } catch (Exception ex) {
+                return StatusCode(500, ex.Message);
+            }
+            
+        }
+    }   
 }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Task_2EF.AppServices;
@@ -103,6 +104,8 @@ namespace Task_2EF
                 };
             });
 
+            //token
+           // services.Configure<DataProtectionTokenProviderOptions>();
 
             services.Configure<EmployeeController>(config =>
             {
