@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -19,17 +20,21 @@ namespace Task_2EF.Controllers
         private readonly UserManager<User> _userManager;
         private readonly IConfiguration _configuration;
         private readonly IAuthService _service;
+        private readonly IEmailSender _emailSender;
+
         public AccountController(
             IMapper mapper,
             UserManager<User> userManager,
             IConfiguration configuration,
-            IAuthService service
+            IAuthService service,
+            IEmailSender emailSender
         )
         {
             _mapper = mapper;
             _userManager = userManager;
             _configuration = configuration;
             _service = service;
+            _emailSender = emailSender;
         }
 
         [HttpPost]
@@ -39,14 +44,20 @@ namespace Task_2EF.Controllers
             try
             {
                 var user = _mapper.Map<User>(userModel);
-                await _service.RegisterAsync(user);
+                var token = await _service.RegisterAsync(user);
+                var confirmUrl = Url.Action(nameof(ConfirmEmail), "Account", new { token, email = user.Email }, Request.Scheme);
+
+                var contentEmail = "Please click here: <a href=\"#URL#\">Click here.</a>";
+                contentEmail = contentEmail.Replace("#URL#", confirmUrl);
+
+                // send
+                await _emailSender.SendEmailAsync(userModel.Email, "Authen your account.", contentEmail);
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
             return Ok("Register successfully.");
-
         }
 
         [HttpPost]
@@ -86,19 +97,39 @@ namespace Task_2EF.Controllers
                 );
 
                 return Ok(
-                           new
-                           {
-                               api_key = new JwtSecurityTokenHandler().WriteToken(token),
-                               expiration = token.ValidTo,
-                               Role = roles,
-                               status = "Login successfully."
-                           }
-                        );
+                    new
+                    {
+                        api_key = new JwtSecurityTokenHandler().WriteToken(token),
+                        expiration = token.ValidTo,
+                        Role = roles,
+                        status = "Login successfully."
+                    }
+                );
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ConfirmEmail(string token, string email)
+        {
+            if (token == null || email == null)
+            {
+                return BadRequest("Invalid email confirmation url.");
+            }
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return BadRequest("Please try again later.");
+            }
+
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+            var status = result.Succeeded ? "Thank you for confirming your mail" :
+                                            "Your email is not confirmed, please try again later.";
+
+            return Ok(status);
         }
     }
 }

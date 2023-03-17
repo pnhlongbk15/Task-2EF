@@ -1,9 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Task_2EF.AppServices;
 using Task_2EF.Configuration;
+using Task_2EF.Controllers;
 using Task_2EF.DAL;
 using Task_2EF.DAL.DataManager;
 using Task_2EF.DAL.Entities;
@@ -22,7 +26,9 @@ namespace Task_2EF
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSwaggerGen();
-            services.AddControllers();
+            services.AddControllers(option =>
+            {
+            });
             services.AddOptions();
             services.AddCors(configs =>
             {
@@ -43,7 +49,7 @@ namespace Task_2EF
             services.AddScoped<IAuthService, AuthService>();
             services.AddMemoryCache(setup =>
             {
-                setup.SizeLimit = 1000;
+                //setup.SizeLimit = 1000;
                 //setup.ExpirationScanFrequency.Add()
             });
 
@@ -56,6 +62,21 @@ namespace Task_2EF
             services.AddIdentity<User, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationContext>()
                 .AddDefaultTokenProviders();
+
+            services.Configure<IdentityOptions>(opt =>
+            {
+                // Password
+                opt.Password.RequiredLength = 7;
+                opt.Password.RequireDigit = false;
+                opt.Password.RequireUppercase = false;
+
+                // User
+                opt.User.RequireUniqueEmail = true;
+
+                // Sign in
+                opt.SignIn.RequireConfirmedEmail = true;
+
+            });
 
             services.AddAuthentication(opt =>
             {
@@ -82,16 +103,24 @@ namespace Task_2EF
                 };
             });
 
-            services.Configure<IdentityOptions>(opt =>
-            {
-                // Password
-                opt.Password.RequiredLength = 7;
-                opt.Password.RequireDigit = false;
-                opt.Password.RequireUppercase = false;
 
-                // Email
-                opt.User.RequireUniqueEmail = true;
+            services.Configure<EmployeeController>(config =>
+            {
+                config.options = new MemoryCacheEntryOptions()
+                                    .SetAbsoluteExpiration(TimeSpan.FromSeconds(3600))
+                                    .SetSlidingExpiration(TimeSpan.FromSeconds(60))
+                                    .SetPriority(CacheItemPriority.Normal)
+                                    .SetSize(100);
+
             });
+
+            //Mail
+            var emailConfig = _configuration
+                                .GetSection("EmailConfiguration")
+                                .Get<EmailConfiguration>();
+
+            services.AddSingleton(emailConfig);
+            services.AddScoped<IEmailSender, MailService>();
 
             services.ConfigureApplicationCookie(options =>
             {
@@ -100,6 +129,8 @@ namespace Task_2EF
                 options.AccessDeniedPath = "/api/address/add";
             });
         }
+
+
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
 

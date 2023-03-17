@@ -34,7 +34,7 @@ namespace Task_2EF.DAL.Services
             throw new Exception("Email or password is invalid.");
         }
 
-        public async Task RegisterAsync(User user)
+        public async Task<String> RegisterAsync(User user)
         {
             try
             {
@@ -53,6 +53,8 @@ namespace Task_2EF.DAL.Services
                     }
                 }
                 await _userManager.AddToRoleAsync(user, "Visitor");
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                return token;
             }
             catch (Exception ex)
             {

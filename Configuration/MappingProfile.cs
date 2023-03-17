@@ -13,6 +13,7 @@ namespace Task_2EF.Configuration
                .ForMember(u => u.PasswordHash, opt => opt.MapFrom(x => x.Password));
             CreateMap<UserLoginModel, User>()
                 .ForMember(u => u.PasswordHash, opt => opt.MapFrom(x => x.Password));
+            CreateMap<EmployeeModel, Employee>().ReverseMap();
         }
     }
 }
