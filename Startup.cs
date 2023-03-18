@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Task_2EF.AppServices;
@@ -64,6 +63,7 @@ namespace Task_2EF
                 .AddIdentity<User, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationContext>()
                 .AddDefaultTokenProviders();
+            //.AddAuthenticatorApp();
 
             services.Configure<IdentityOptions>(opt =>
             {
@@ -77,7 +77,7 @@ namespace Task_2EF
 
                 // Sign in
                 opt.SignIn.RequireConfirmedEmail = true;
-                
+
 
                 // Lock
                 opt.Lockout.AllowedForNewUsers = true;

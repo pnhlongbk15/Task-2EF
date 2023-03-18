@@ -1,13 +1,14 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Task_2EF.DAL.Entities;
-using Task_2EF.DAL.Models;
 using Task_2EF.DAL.Repository;
+using Task_2EF.Models;
 
 namespace Task_2EF.Controllers
 {
-    //[Authorize(Roles = "Visitor")]
+    [Authorize(Roles = "Visitor")]
     [ApiController]
     [Route("api/[controller]/[action]")]
     public class EmployeeController : ControllerBase

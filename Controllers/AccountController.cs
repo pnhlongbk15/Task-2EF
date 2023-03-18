@@ -7,8 +7,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Task_2EF.DAL.Entities;
-using Task_2EF.DAL.Models;
 using Task_2EF.DAL.Repository;
+using Task_2EF.Models;
 
 namespace Task_2EF.Controllers
 {
@@ -70,15 +70,28 @@ namespace Task_2EF.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(UserLoginModel userModel)
+        public async Task<IActionResult> Login(PasswordLoginModel userModel)
         {
             try
             {
                 var user = _mapper.Map<User>(userModel);
-                dynamic result = await _service.LoginAsync(user);
+                var token = await _service.LoginAsync(user);
+                return Ok(token);
 
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpPost]
+        public async Task<IActionResult> LoginStepTwo(LoginStepTwoModel mLoginST, string Email)
+        {
+            try
+            {
+                dynamic result = await _service.LoginStepTwo(mLoginST.TwoFactorCode, Email);
                 var roles = result.roles;
-                user = result.user;
+                var user = result.user;
 
                 var authClaims = new List<Claim>
                 {
@@ -149,9 +162,11 @@ namespace Task_2EF.Controllers
             {
                 return BadRequest("Please entry your email.");
             }
-            try { 
+            try
+            {
                 var aUser = await _userManager.FindByEmailAsync(mForgotPassword.Email);
-                if(aUser == null){
+                if (aUser == null)
+                {
                     return BadRequest("Incorrect.");
                 }
                 var token = await _userManager.GeneratePasswordResetTokenAsync(aUser);
@@ -173,7 +188,8 @@ namespace Task_2EF.Controllers
                     contentEmail
                 );
             }
-            catch (Exception ex) { 
+            catch (Exception ex)
+            {
                 return StatusCode(500, ex.Message);
             }
 
@@ -181,26 +197,33 @@ namespace Task_2EF.Controllers
         }
 
         [HttpGet]
-        public IActionResult ResetPassword(string token, string email){
-            return Ok(new {
+        public IActionResult ResetPassword(string token, string email)
+        {
+            return Ok(new
+            {
                 token = token,
                 email = email
             });
         }
         [HttpPost]
-        public async Task<IActionResult> ResetPassword(ResetPasswordModel mResetPassword){
-            if (mResetPassword == null) {
+        public async Task<IActionResult> ResetPassword(ResetPasswordModel mResetPassword)
+        {
+            if (mResetPassword == null)
+            {
                 return BadRequest("you try again.");
             }
 
-            try {
+            try
+            {
 
                 var aUser = await _userManager.FindByEmailAsync(mResetPassword.Email);
-                if(aUser == null) {
+                if (aUser == null)
+                {
                     return BadRequest("User doesn't exist.");
                 }
                 var resetPassResult = await _userManager.ResetPasswordAsync(aUser, mResetPassword.Token, mResetPassword.Password);
-                if(!resetPassResult.Succeeded) {
+                if (!resetPassResult.Succeeded)
+                {
                     foreach (var error in resetPassResult.Errors)
                     {
                         ModelState.TryAddModelError(error.Code, error.Description);
@@ -209,10 +232,12 @@ namespace Task_2EF.Controllers
                 }
                 return Ok("Reset password successfully.");
 
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 return StatusCode(500, ex.Message);
             }
-            
+
         }
-    }   
+    }
 }

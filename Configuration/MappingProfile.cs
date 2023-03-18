@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Task_2EF.DAL.Entities;
-using Task_2EF.DAL.Models;
+using Task_2EF.Models;
 
 namespace Task_2EF.Configuration
 {
@@ -11,7 +11,7 @@ namespace Task_2EF.Configuration
             CreateMap<UserRegistrationModel, User>()
                .ForMember(u => u.UserName, opt => opt.MapFrom(x => x.Email))
                .ForMember(u => u.PasswordHash, opt => opt.MapFrom(x => x.Password));
-            CreateMap<UserLoginModel, User>()
+            CreateMap<PasswordLoginModel, User>()
                 .ForMember(u => u.PasswordHash, opt => opt.MapFrom(x => x.Password));
             CreateMap<EmployeeModel, Employee>().ReverseMap();
         }

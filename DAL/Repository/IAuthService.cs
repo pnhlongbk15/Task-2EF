@@ -5,6 +5,7 @@ namespace Task_2EF.DAL.Repository
     public interface IAuthService
     {
         Task<String> RegisterAsync(User user);
-        Task<Object> LoginAsync(User user);
+        Task<String> LoginAsync(User user);
+        Task<Object> LoginStepTwo(string twoFactorCode, string email);
     }
 }

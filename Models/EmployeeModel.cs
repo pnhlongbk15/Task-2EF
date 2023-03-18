@@ -1,4 +1,4 @@
-﻿namespace Task_2EF.DAL.Models
+﻿namespace Task_2EF.Models
 {
     public class EmployeeModel
     {

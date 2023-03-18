@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Task_2EF.DAL.Models
+namespace Task_2EF.Models
 {
-    public class UserLoginModel
+    public class PasswordLoginModel
     {
         [Required(ErrorMessage = "Email is required")]
         [EmailAddress]
