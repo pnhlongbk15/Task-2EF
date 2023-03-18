@@ -26,8 +26,9 @@ namespace Task_2EF.DAL.Services
                 Console.WriteLine(user.Email);
                 Console.WriteLine(user.PasswordHash);
 
-                //var signInResult = await _signInManager.PasswordSignInAsync(result.UserName, user.PasswordHash, false, false);
-                var signInResult = await _signInManager.CheckPasswordSignInAsync(aResult, user.PasswordHash, true);
+                await _signInManager.SignOutAsync();
+                var signInResult = await _signInManager.PasswordSignInAsync(aResult, user.PasswordHash, false, true);
+                //var signInResult = await _signInManager.CheckPasswordSignInAsync(aResult, user.PasswordHash, true);
                 //var check = await _userManager.CheckPasswordAsync(result, user.PasswordHash);
 
                 if (!signInResult.Succeeded)
